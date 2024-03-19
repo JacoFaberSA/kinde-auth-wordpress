@@ -567,7 +567,7 @@ class Kinde_Auth_Wordpress_Authenticate
              *
              * @return string
              */
-            $user_role = appy_filters(
+            $user_role = apply_filters(
                 'kinde_auth_auto_user_role',
                 esc_attr(get_option('kinde_auth_auto_user_role', 'subscriber')),
                 $kinde_user
