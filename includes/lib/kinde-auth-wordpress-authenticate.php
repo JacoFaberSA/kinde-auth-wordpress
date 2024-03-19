@@ -16,6 +16,7 @@ use Kinde\KindeSDK\Api\OAuthApi;
 use Kinde\KindeSDK\Configuration;
 use Kinde\KindeSDK\KindeClientSDK;
 use Kinde\KindeSDK\Sdk\Enums\GrantType;
+use Kinde\KindeSDK\Model\UserProfile;
 use Kinde\KindeSDK\Sdk\Enums\AuthStatus;
 
 /**
@@ -519,7 +520,21 @@ class Kinde_Auth_Wordpress_Authenticate
 
         if (empty($current_user)) {
             $user_login = "kinde_user_".generate_random_string();
-            $user_role = esc_attr(get_option('kinde_auth_auto_user_role', 'subscriber'));
+            
+            /**
+             * Allow the role to be set from the theme or plugin.
+             *
+             * @param string $user_role The user role.
+             * @param UserProfile $kindeUser The kinde user.
+             *
+             * @return string
+             */
+            $user_role = appy_filters(
+                'kinde_auth_auto_user_role',
+                esc_attr(get_option('kinde_auth_auto_user_role', 'subscriber')),
+                $kinde_user
+            );
+            
             $user_data = array(
                 'user_login' => $user_login,
                 'user_email' => $kinde_user['preferred_email'],
