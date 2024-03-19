@@ -336,45 +336,56 @@ class Kinde_Auth_Wordpress_Authenticate
                 wp_set_current_user($wordpress_user['user_id'], $wordpress_user['user_login']);
                 wp_set_auth_cookie($wordpress_user['user_id']);
                 do_action('wp_login', $wordpress_user['user_login'], $current_user);
+    
+                /**
+                 * Allow the admin roles to be set from the theme or plugin.
+                 *
+                 * @param array $admin_roles The admin roles.
+                 *
+                 * @return array
+                 */
+                $admin_roles = apply_filters('kinde_auth_admin_roles', ['administrator', 'editor', 'author']);
 
                 if (empty($wordpress_user['user_role']) ||
-                    in_array($wordpress_user['user_role'], ['subscriber', 'contributor'])
+                    in_array($wordpress_user['user_role'], $admin_roles, true)
                 ) {
                     /**
-                     * Allow the frontend url to be changed from the theme or plugin.
+                     * Allow the admin url to be changed from the theme or plugin.
                      *
-                     * @param string $frontend_url The frontend url.
-                     * @param string $action The action.
-                     * @param ?array $wordpress_user The wordpress user.
+                     * @param string $admin_url The admin url.
+                     * @param array $wordpress_user The wordpress user.
                      *
                      * @return string
                      */
-                    $wordpress_frontend_url = apply_filters(
-                        'kinde_auth_wordpress_frontend_url',
-                        $this->wordpress_frontend_url,
+                    $wordpress_admin_url = apply_filters(
+                        'kinde_auth_wordpress_admin_url',
+                        $this->wordpress_admin_url,
                         'login',
                         $wordpress_user
                     );
-                    
-                    exit(header("Location:  $wordpress_frontend_url"));
+    
+                    exit(header("Location: $wordpress_admin_url"));
                 }
-                
+    
                 /**
-                 * Allow the admin url to be changed from the theme or plugin.
+                 * Allow the frontend url to be changed from the theme or plugin.
                  *
-                 * @param string $admin_url The admin url.
-                 * @param array $wordpress_user The wordpress user.
+                 * @param string $frontend_url The frontend url.
+                 * @param string $action The action.
+                 * @param ?array $wordpress_user The wordpress user.
                  *
                  * @return string
                  */
-                $wordpress_admin_url = apply_filters(
-                    'kinde_auth_wordpress_admin_url',
-                    $this->wordpress_admin_url,
+                $wordpress_frontend_url = apply_filters(
+                    'kinde_auth_wordpress_frontend_url',
+                    $this->wordpress_frontend_url,
                     'login',
                     $wordpress_user
                 );
+    
+                exit(header("Location:  $wordpress_frontend_url"));
                 
-                exit(header("Location: $wordpress_admin_url"));
+                
 
             } catch (ClientException | RequestException $e) {
                 $error_message = $e->getMessage();
@@ -429,26 +440,37 @@ class Kinde_Auth_Wordpress_Authenticate
 
             // redirect follow roles
             $user_role = $current_user->roles[0] ?? '';
-            if (in_array($user_role, ['subscriber', 'contributor'])) {
-                /**
-                 * Allow the frontend url to be changed from the theme or plugin.
-                 *
-                 * @param string $frontend_url The frontend url.
-                 * @param string $action The action.
-                 * @param ?array $wordpress_user The wordpress user.
-                 *
-                 * @return string
-                 */
-                $wordpress_frontend_url = apply_filters(
-                    'kinde_auth_wordpress_frontend_url',
-                    $this->wordpress_frontend_url,
-                    'logout',
-                    null
-                );
-                
-                exit(header("Location: $wordpress_frontend_url"));
+    
+            /**
+             * Allow the admin roles to be set from the theme or plugin.
+             *
+             * @param array $admin_roles The admin roles.
+             *
+             * @return array
+             */
+            $admin_roles = apply_filters('kinde_auth_admin_roles', ['administrator', 'editor', 'author']);
+            
+            if (in_array($user_role, $admin_roles, true)) {
+                exit(header("Location: /wp-new-login"));
             }
-            exit(header("Location: /wp-new-login"));
+    
+            /**
+             * Allow the frontend url to be changed from the theme or plugin.
+             *
+             * @param string $frontend_url The frontend url.
+             * @param string $action The action.
+             * @param ?array $wordpress_user The wordpress user.
+             *
+             * @return string
+             */
+            $wordpress_frontend_url = apply_filters(
+                'kinde_auth_wordpress_frontend_url',
+                $this->wordpress_frontend_url,
+                'logout',
+                null
+            );
+    
+            exit(header("Location: $wordpress_frontend_url"));
         }
 
         // if user is kinde
