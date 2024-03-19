@@ -217,7 +217,15 @@ class Kinde_Auth_Wordpress_Authenticate
 
         $errorMessage = "";
         try {
-            $response = $this->kinde_client->login();
+            /**
+             * Allow the login params to be changed from the theme or plugin.
+             *
+             * @param array $login_params The login params.
+             *
+             * @return array
+             */
+            $login_params = apply_filters('kinde_auth_login_params', []);
+            $response = $this->kinde_client->login($login_params);
             if ($this->grant_type == GrantType::clientCredentials && !empty($response->access_token)) {
                 exit(header("Location: /kinde-authenticate/response?code=$response->access_token"));
             }
@@ -251,7 +259,15 @@ class Kinde_Auth_Wordpress_Authenticate
 
         $errorMessage = "";
         try {
-            $this->kinde_client->register();
+            /**
+             * Allow the register params to be changed from the theme or plugin.
+             *
+             * @param array $login_params The login params.
+             *
+             * @return array
+             */
+            $register_params = apply_filters('kinde_auth_login_params', []);
+            $this->kinde_client->register($register_params);
         } catch (ClientException $e) {
             $errorMessage = $e->getMessage();
         } catch (RequestException $e) {
